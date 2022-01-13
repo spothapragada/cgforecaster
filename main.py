@@ -29,7 +29,7 @@ if "__main__" == __name__:
     f = Forecaster(data=df, **model_args)
     f.preprocess_data()
     f.train_test_split()
-    my_forecast = f.pmdarima_forecast()
+    my_forecast = f.make_forecast()
     f.plot_forecast()
 
     logging.info("Done-zo!!")
