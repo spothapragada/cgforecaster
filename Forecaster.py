@@ -7,8 +7,8 @@ from pmdarima import auto_arima
 
 from params import *
 
-# from fbprophet import Prophet
-# from fbprophet.plot import add_changepoints_to_plot
+from prophet import Prophet
+from prophet.plot import add_changepoints_to_plot
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -33,12 +33,13 @@ class Forecaster:
     def make_forecast(self):
         if self.model_type == 'prophet':
             logging.info('The Model Type is Prophet')
-            # self.forecast = self.prophet_forecast()
+            self.forecast = self.prophet_forecast()
         elif self.model_type == 'pmdarima':
             self.forecast = self.pmdarima_forecast()
         else:
-            print('Model type not recognized')
-            return self.forecast
+            logging.info('Model type not recognized')
+
+        return self.forecast
 
     def preprocess_data(self):
         """
@@ -72,37 +73,38 @@ class Forecaster:
 
         return self.df_train, self.df_test
 
-    # def prophet_forecast(self):
-    #     # Import the required packages
-    #
-    #     # Create a dataframe from the data
-    #     dframe = self.data
-    #
-    #     logging.info('Making forecast using Facebook Prophet')
-    #     # Create the model using the model_params
-    #
-    #
-    #     # m = Prophet(yearly_seasonality=False, weekly_seasonality=False, daily_seasonality=False,
-    #     #             holidays=None, changepoint_prior_scale=0.05, changepoints=None,
-    #     #             changepoint_range=0.8, interval_width=0.95, seasonality_mode='multiplicative',
-    #     #             seasonality_prior_scale=10, holidays_prior_scale=10)
-    #
-    #     logging.info('Model parameters: {}'.format(self.model_params))
-    #
-    #     # Fit the model
-    #     m.fit(dframe)
-    #
-    #     # Make the forecast
-    #     future = m.make_future_dataframe(periods=len(self.data))
-    #     forecast = m.predict(future)
-    #
-    #     # Plot the forecast
-    #     fig = m.plot(forecast)
-    #     add_changepoints_to_plot(fig.gca(), m, forecast)
-    #     plt.show()
-    #
-    #     # Return the forecast
-    #     return forecast
+    def prophet_forecast(self):
+        # Import the required packages
+
+        # Create a dataframe from the data
+        dframe = self.data
+
+        logging.info('Making forecast using Facebook Prophet')
+        # Create the model using the model_params
+
+
+        # m = Prophet(yearly_seasonality=False, weekly_seasonality=False, daily_seasonality=False,
+        #             holidays=None, changepoint_prior_scale=0.05, changepoints=None,
+        #             changepoint_range=0.8, interval_width=0.95, seasonality_mode='multiplicative',
+        #             seasonality_prior_scale=10, holidays_prior_scale=10)
+
+        m = Prophet(**self.model_params)
+        logging.info('Model parameters: {}'.format(self.model_params))
+
+        # Fit the model
+        m.fit(dframe)
+
+        # Make the forecast
+        future = m.make_future_dataframe(periods=len(self.data))
+        forecast = m.predict(future)
+
+        # Plot the forecast
+        fig = m.plot(forecast)
+        add_changepoints_to_plot(fig.gca(), m, forecast)
+        plt.show()
+
+        # Return the forecast
+        return forecast
 
     def pmdarima_forecast(self):
         # Import the required packages
@@ -147,21 +149,3 @@ class Forecaster:
         plt.plot(self.forecast['yhat'], label='Forecast')
         plt.legend(loc='best')
         plt.show()
-
-
-if '__main__' == __name__:
-    # passing model arguments to the class
-    model_args = {'model_params': pmdarima_model_params,
-                  'time_windows': start_end_dates,
-                  'model_name': 'pmdarima',
-                  'model_type': 'pmdarima'}
-
-    df = pd.read_csv('data/AirPassengers.csv')
-    df.columns = ['ds', 'y']
-
-    # Create an instance of the Forecaster class
-    f = Forecaster(data=df, **model_args)
-    f.preprocess_data()
-    f.train_test_split()
-    my_forecast = f.pmdarima_forecast()
-    f.plot_forecast()
