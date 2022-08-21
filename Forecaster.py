@@ -73,6 +73,21 @@ class Forecaster:
 
         return self.df_train, self.df_test
 
+    # Create train and test dataframes from a timeseries dataframe
+    def train_test_split_from_df(self, df, ratio=0.8):
+        """
+        Split the data into training and test using the start_end_dates
+        :return: Dataframes df_train, df_test
+        """
+        # Create the training dataset from the training dates
+        self.df_train = df.iloc[:int(len(df) * ratio)]
+        # Create the test dataset from the test dates
+        self.df_test = df.iloc[int(len(df) * ratio):]
+
+        return self.df_train, self.df_test
+
+
+
     def prophet_forecast(self):
         # Import the required packages
 
@@ -149,3 +164,57 @@ class Forecaster:
         plt.plot(self.forecast['yhat'], label='Forecast')
         plt.legend(loc='best')
         plt.show()
+
+    # Method to calculate metri for time series
+    def calculate_metrics(self):
+        # Calculate the metrics
+        self.metrics = {}
+        self.metrics['mse'] = mean_squared_error(self.df_test['y'], self.forecast['yhat'])
+        self.metrics['mae'] = mean_absolute_error(self.df_test['y'], self.forecast['yhat'])
+        self.metrics['mape'] = mean_absolute_percentage_error(self.df_test['y'], self.forecast['yhat'])
+        self.metrics['mpe'] = mean_percentage_error(self.df_test['y'], self.forecast['yhat'])
+        self.metrics['smape'] = symmetric_mean_absolute_percentage_error(self.df_test['y'], self.forecast['yhat'])
+        self.metrics['r2'] = r2_score(self.df_test['y'], self.forecast['yhat'])
+        self.metrics['rmse'] = np.sqrt(mean_squared_error(self.df_test['y'], self.forecast['yhat']))
+        self.metrics['mape_upper'] = mean_absolute_percentage_error(self.df_test['y'], self.forecast['ci_upper'])
+        self.metrics['mape_lower'] = mean_absolute_percentage_error(self.df_test['y'], self.forecast['ci_lower'])
+        self.metrics['mpe_upper'] = mean_percentage_error(self.df_test['y'], self.forecast['ci_upper'])
+        self.metrics['mpe_lower'] = mean_percentage_error(self.df_test['y'], self.forecast['ci_lower'])
+        self.metrics['smape_upper'] = symmetric_mean_absolute_percentage_error(self.df_test['y'], self.forecast['ci_upper'])
+        self.metrics['smape_lower'] = symmetric_mean_absolute_percentage_error(self.df_test['y'], self.forecast['ci_lower'])
+        self.metrics['r2_upper'] = r2_score(self.df_test['y'], self.forecast['ci_upper'])
+        self.metrics['r2_lower'] = r2_score(self.df_test['y'], self.forecast['ci_lower'])
+        self.metrics['rmse_upper'] = np.sqrt(mean_squared_error(self.df_test['y'], self.forecast['ci_upper']))
+        self.metrics['rmse_lower'] = np.sqrt(mean_squared_error(self.df_test['y'], self.forecast['ci_lower']))
+
+        return self.metrics
+
+    # Method to print the metrics
+    def print_metrics(self):
+        # Print the metrics
+        logging.info('Metrics:')
+        logging.info('MSE: ' + str(self.metrics['mse']))
+        logging.info('MAE: ' + str(self.metrics['mae']))
+        logging.info('MAPE: ' + str(self.metrics['mape']))
+        logging.info('MPE: ' + str(self.metrics['mpe']))
+        logging.info('SMAPE: ' + str(self.metrics['smape']))
+        logging.info('R2: ' + str(self.metrics['r2']))
+        logging.info('RMSE: ' + str(self.metrics['rmse']))
+        logging.info('MAPE Upper: ' + str(self.metrics['mape_upper']))
+        logging.info('MAPE Lower: ' + str(self.metrics['mape_lower']))
+        logging.info('MPE Upper: ' + str(self.metrics['mpe_upper']))
+        logging.info('MPE Lower: ' + str(self.metrics['mpe_lower']))
+        logging.info('SMAPE Upper: ' + str(self.metrics['smape_upper']))
+        logging.info('SMAPE Lower: ' + str(self.metrics['smape_lower']))
+        logging.info('R2 Upper: ' + str(self.metrics['r2_upper']))
+        logging.info('R2 Lower: ' + str(self.metrics['r2_lower']))
+        logging.info('RMSE Upper: ' + str(self.metrics['rmse_upper']))
+        logging.info('RMSE Lower: ' + str(self.metrics['rmse_lower']))
+
+    # Method to read an input stream and return a dataframe
+    def read_stream(self, stream):
+        # Read the stream
+        df = pd.read_csv(stream, sep=',', header=0, index_col=0)
+        # Return the dataframe
+        return df
+
